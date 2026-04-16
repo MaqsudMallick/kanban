@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import { KanbanIssue } from "@/lib/types";
 import { AssigneePicker } from "./assignee-picker";
+import { CreateBranchModal } from "./create-branch-modal";
 
 export function IssueCard({
   issue,
@@ -20,6 +21,7 @@ export function IssueCard({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerAnchor, setPickerAnchor] = useState<{ x: number; y: number } | null>(null);
   const [savingAssignees, setSavingAssignees] = useState(false);
+  const [branchModalOpen, setBranchModalOpen] = useState(false);
   const issueKey = `${issue.repoOwner}/${issue.repo}#${issue.number}`;
 
   const openPicker = (e: React.MouseEvent) => {
@@ -177,19 +179,40 @@ export function IssueCard({
                 </span>
               )}
             </button>
-            {issue.comments > 0 && (
-              <span className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
-                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setBranchModalOpen(true);
+                }}
+                className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-500 dark:hover:bg-neutral-700 dark:hover:text-gray-200"
+                title="Create branch"
+                aria-label="Create branch"
+              >
+                <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor">
                   <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                    fillRule="evenodd"
+                    d="M11.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122V6A2.5 2.5 0 0110 8.5H6a1 1 0 00-1 1v1.128a2.251 2.251 0 11-1.5 0V5.372a2.25 2.25 0 111.5 0v1.836A2.492 2.492 0 016 7h4a1 1 0 001-1v-.628A2.25 2.25 0 019.5 3.25zM4.25 12a.75.75 0 100 1.5.75.75 0 000-1.5zM3.5 3.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0z"
                   />
                 </svg>
-                {issue.comments}
-              </span>
-            )}
+              </button>
+              {issue.comments > 0 && (
+                <span className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                    />
+                  </svg>
+                  {issue.comments}
+                </span>
+              )}
+            </div>
           </div>
 
           {pickerOpen && pickerAnchor && (
@@ -200,6 +223,12 @@ export function IssueCard({
               onChange={handleAssigneesChange}
               onClose={() => setPickerOpen(false)}
               anchor={pickerAnchor}
+            />
+          )}
+          {branchModalOpen && (
+            <CreateBranchModal
+              issue={issue}
+              onClose={() => setBranchModalOpen(false)}
             />
           )}
         </div>

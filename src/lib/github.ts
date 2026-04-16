@@ -274,6 +274,42 @@ export async function fetchRepoLabels(
   }));
 }
 
+export async function getDefaultBranch(
+  octokit: Octokit,
+  owner: string,
+  repo: string
+): Promise<string> {
+  const { data } = await octokit.repos.get({ owner, repo });
+  return data.default_branch;
+}
+
+export async function createBranch(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  branchName: string,
+  sourceBranch?: string
+) {
+  const source = sourceBranch ?? (await getDefaultBranch(octokit, owner, repo));
+
+  // Get the SHA of the source branch
+  const { data: ref } = await octokit.git.getRef({
+    owner,
+    repo,
+    ref: `heads/${source}`,
+  });
+
+  // Create the new branch
+  const { data: newRef } = await octokit.git.createRef({
+    owner,
+    repo,
+    ref: `refs/heads/${branchName}`,
+    sha: ref.object.sha,
+  });
+
+  return { ref: newRef, source, sha: ref.object.sha };
+}
+
 export async function fetchUserRepos(octokit: Octokit) {
   const repos = await octokit.paginate(octokit.repos.listForAuthenticatedUser, {
     per_page: 100,
