@@ -17,8 +17,8 @@ export function IssueCard({
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`rounded-lg border bg-white p-3 shadow-sm transition-shadow ${
-            snapshot.isDragging ? "shadow-lg ring-2 ring-blue-400" : "hover:shadow-md"
+          className={`rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-shadow dark:border-gray-800 dark:bg-neutral-800 ${
+            snapshot.isDragging ? "shadow-lg ring-2 ring-blue-400 dark:ring-blue-500" : "hover:shadow-md"
           }`}
         >
           {/* Repo badge */}
@@ -27,10 +27,10 @@ export function IssueCard({
               className="inline-block h-2 w-2 rounded-full"
               style={{ backgroundColor: issue.repoColor }}
             />
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-500 dark:text-gray-400">
               {issue.repoOwner}/{issue.repo}
             </span>
-            <span className="text-xs text-gray-400">#{issue.number}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">#{issue.number}</span>
           </div>
 
           {/* Title */}
@@ -38,7 +38,7 @@ export function IssueCard({
             href={issue.html_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="mb-2 block text-sm font-medium text-gray-900 hover:text-blue-600"
+            className="mb-2 block text-sm font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400"
             onClick={(e) => e.stopPropagation()}
           >
             {issue.title}
@@ -72,7 +72,7 @@ export function IssueCard({
                   href={pr.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800"
+                  className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <svg className="h-3 w-3" viewBox="0 0 16 16" fill="currentColor">
@@ -84,9 +84,9 @@ export function IssueCard({
                   <span className={pr.draft ? "italic" : ""}>
                     PR #{pr.number}{" "}
                     {pr.state === "open" ? (
-                      <span className="text-green-600">open</span>
+                      <span className="text-green-600 dark:text-green-400">open</span>
                     ) : (
-                      <span className="text-red-500">closed</span>
+                      <span className="text-red-500 dark:text-red-400">closed</span>
                     )}
                   </span>
                 </a>
@@ -103,12 +103,12 @@ export function IssueCard({
                   src={a.avatar_url}
                   alt={a.login}
                   title={a.login}
-                  className="h-5 w-5 rounded-full border border-white"
+                  className="h-5 w-5 rounded-full border border-white dark:border-neutral-800"
                 />
               ))}
             </div>
             {issue.comments > 0 && (
-              <span className="flex items-center gap-1 text-xs text-gray-400">
+              <span className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"

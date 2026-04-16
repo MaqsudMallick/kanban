@@ -103,8 +103,8 @@ export function KanbanBoard({ board }: { board: BoardConfig }) {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-500" />
-          <p className="text-sm text-gray-500">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-500 dark:border-gray-700 dark:border-t-blue-400" />
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Loading issues from {board.repos.length} repo{board.repos.length !== 1 ? "s" : ""}...
           </p>
         </div>
@@ -115,9 +115,9 @@ export function KanbanBoard({ board }: { board: BoardConfig }) {
   if (error) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <div className="rounded-lg bg-red-50 p-6 text-center">
-          <p className="text-sm font-medium text-red-800">Error loading issues</p>
-          <p className="mt-1 text-sm text-red-600">{error}</p>
+        <div className="rounded-lg bg-red-50 p-6 text-center dark:bg-red-950/40">
+          <p className="text-sm font-medium text-red-800 dark:text-red-200">Error loading issues</p>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-300">{error}</p>
           <button
             onClick={() => {
               setLoading(true);

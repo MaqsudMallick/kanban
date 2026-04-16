@@ -12,15 +12,15 @@ export function BoardColumn({
   issues: KanbanIssue[];
 }) {
   return (
-    <div className="flex h-full w-80 shrink-0 flex-col rounded-xl bg-gray-50 border border-gray-200">
+    <div className="flex h-full w-80 shrink-0 flex-col rounded-xl bg-gray-50 border border-gray-200 dark:bg-neutral-900 dark:border-gray-800">
       {/* Column header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-800">
         <span
           className="h-3 w-3 rounded-full"
           style={{ backgroundColor: column.color }}
         />
-        <h3 className="text-sm font-semibold text-gray-700">{column.title}</h3>
-        <span className="ml-auto rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-600">
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">{column.title}</h3>
+        <span className="ml-auto rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-neutral-800 dark:text-gray-400">
           {issues.length}
         </span>
       </div>
@@ -32,7 +32,7 @@ export function BoardColumn({
             ref={provided.innerRef}
             {...provided.droppableProps}
             className={`flex-1 overflow-y-auto p-2 space-y-2 transition-colors ${
-              snapshot.isDraggingOver ? "bg-blue-50" : ""
+              snapshot.isDraggingOver ? "bg-blue-50 dark:bg-blue-900/20" : ""
             }`}
           >
             {issues.map((issue, index) => (
@@ -44,7 +44,7 @@ export function BoardColumn({
             ))}
             {provided.placeholder}
             {issues.length === 0 && !snapshot.isDraggingOver && (
-              <div className="py-8 text-center text-sm text-gray-400">
+              <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-600">
                 No issues
               </div>
             )}
