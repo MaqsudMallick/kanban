@@ -18,12 +18,17 @@ export function BoardColumn({
   onAddIssue,
   onWidthChange,
   onToggleCollapse,
+  onAssigneesChange,
 }: {
   column: BoardColumnType;
   issues: KanbanIssue[];
   onAddIssue?: (columnId: string) => void;
   onWidthChange?: (columnId: string, width: number) => void;
   onToggleCollapse?: (columnId: string) => void;
+  onAssigneesChange?: (
+    issueKey: string,
+    assignees: { login: string; avatar_url: string }[]
+  ) => void;
 }) {
   const collapsed = column.collapsed ?? false;
   const width = collapsed
@@ -147,6 +152,7 @@ export function BoardColumn({
                 key={`${issue.repoOwner}/${issue.repo}#${issue.number}`}
                 issue={issue}
                 index={index}
+                onAssigneesChange={onAssigneesChange}
               />
             ))}
             {provided.placeholder}

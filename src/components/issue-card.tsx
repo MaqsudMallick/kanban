@@ -1,17 +1,70 @@
 "use client";
 
+import { useState } from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import { KanbanIssue } from "@/lib/types";
+import { AssigneePicker } from "./assignee-picker";
 
 export function IssueCard({
   issue,
   index,
+  onAssigneesChange,
 }: {
   issue: KanbanIssue;
   index: number;
+  onAssigneesChange?: (
+    issueKey: string,
+    assignees: { login: string; avatar_url: string }[]
+  ) => void;
 }) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerAnchor, setPickerAnchor] = useState<{ x: number; y: number } | null>(null);
+  const [savingAssignees, setSavingAssignees] = useState(false);
+  const issueKey = `${issue.repoOwner}/${issue.repo}#${issue.number}`;
+
+  const openPicker = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setPickerAnchor({ x: rect.left, y: rect.bottom + 4 });
+    setPickerOpen(true);
+  };
+
+  const handleAssigneesChange = async (logins: string[]) => {
+    if (!onAssigneesChange || savingAssignees) return;
+    setSavingAssignees(true);
+
+    // Optimistic local update
+    const optimistic = logins.map((login) => {
+      const existing = issue.assignees.find((a) => a.login === login);
+      return existing ?? { login, avatar_url: `https://github.com/${login}.png` };
+    });
+    onAssigneesChange(issueKey, optimistic);
+
+    try {
+      const res = await fetch("/api/github/assign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          owner: issue.repoOwner,
+          repo: issue.repo,
+          issueNumber: issue.number,
+          assignees: logins,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to assign");
+      const data = await res.json();
+      onAssigneesChange(issueKey, data.assignees);
+    } catch {
+      // Revert on failure
+      onAssigneesChange(issueKey, issue.assignees);
+    } finally {
+      setSavingAssignees(false);
+    }
+  };
+
   return (
-    <Draggable draggableId={`${issue.repoOwner}/${issue.repo}#${issue.number}`} index={index}>
+    <Draggable draggableId={issueKey} index={index}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
@@ -96,17 +149,34 @@ export function IssueCard({
 
           {/* Footer: assignees + comment count */}
           <div className="flex items-center justify-between">
-            <div className="flex -space-x-1">
-              {issue.assignees.map((a) => (
-                <img
-                  key={a.login}
-                  src={a.avatar_url}
-                  alt={a.login}
-                  title={a.login}
-                  className="h-5 w-5 rounded-full border border-white dark:border-neutral-800"
-                />
-              ))}
-            </div>
+            <button
+              type="button"
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={openPicker}
+              className="-m-1 flex items-center gap-1 rounded p-1 hover:bg-gray-100 dark:hover:bg-neutral-700"
+              title="Assign people"
+              disabled={!onAssigneesChange}
+            >
+              {issue.assignees.length > 0 ? (
+                <div className="flex -space-x-1">
+                  {issue.assignees.map((a) => (
+                    <img
+                      key={a.login}
+                      src={a.avatar_url}
+                      alt={a.login}
+                      title={a.login}
+                      className="h-5 w-5 rounded-full border border-white dark:border-neutral-800"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full border border-dashed border-gray-300 text-gray-400 dark:border-gray-600 dark:text-gray-500">
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+                  </svg>
+                </span>
+              )}
+            </button>
             {issue.comments > 0 && (
               <span className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -121,6 +191,17 @@ export function IssueCard({
               </span>
             )}
           </div>
+
+          {pickerOpen && pickerAnchor && (
+            <AssigneePicker
+              owner={issue.repoOwner}
+              repo={issue.repo}
+              selected={issue.assignees.map((a) => a.login)}
+              onChange={handleAssigneesChange}
+              onClose={() => setPickerOpen(false)}
+              anchor={pickerAnchor}
+            />
+          )}
         </div>
       )}
     </Draggable>

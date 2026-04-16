@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { BoardConfig, KanbanIssue, determineColumn } from "@/lib/types";
+import { AssigneePicker } from "./assignee-picker";
 
 interface RepoLabel {
   name: string;
@@ -28,6 +29,8 @@ export function NewIssueModal({
   const [availableLabels, setAvailableLabels] = useState<RepoLabel[]>([]);
   const [selectedLabels, setSelectedLabels] = useState<Set<string>>(new Set());
   const [labelsLoading, setLabelsLoading] = useState(false);
+  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
+  const [showAssigneePicker, setShowAssigneePicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,6 +80,7 @@ export function NewIssueModal({
       (m) => m.columnId === defaultColumnId
     );
     setSelectedLabels(mapping?.label ? new Set([mapping.label]) : new Set());
+    setSelectedAssignees([]);
   };
 
   const toggleLabel = (name: string) => {
@@ -105,6 +109,7 @@ export function NewIssueModal({
           title,
           body,
           labels: Array.from(selectedLabels),
+          assignees: selectedAssignees,
         }),
       });
 
@@ -293,6 +298,51 @@ export function NewIssueModal({
                     );
                   })}
                 </div>
+              )}
+            </div>
+
+            {/* Assignees */}
+            <div className="relative">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Assignees
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowAssigneePicker(!showAssigneePicker)}
+                className="flex w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+              >
+                {selectedAssignees.length === 0 ? (
+                  <span className="text-gray-400">No one assigned</span>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="flex -space-x-1">
+                      {selectedAssignees.slice(0, 5).map((login) => (
+                        <img
+                          key={login}
+                          src={`https://github.com/${login}.png?size=40`}
+                          alt={login}
+                          title={login}
+                          className="h-5 w-5 rounded-full border border-white dark:border-neutral-800"
+                        />
+                      ))}
+                    </div>
+                    <span className="text-gray-700 dark:text-gray-200">
+                      {selectedAssignees.length} assigned
+                    </span>
+                  </div>
+                )}
+                <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {showAssigneePicker && (
+                <AssigneePicker
+                  owner={owner}
+                  repo={repo}
+                  selected={selectedAssignees}
+                  onChange={setSelectedAssignees}
+                  onClose={() => setShowAssigneePicker(false)}
+                />
               )}
             </div>
 

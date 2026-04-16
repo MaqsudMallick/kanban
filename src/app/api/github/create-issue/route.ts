@@ -9,12 +9,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { owner, repo, title, body, labels } = (await request.json()) as {
+    const { owner, repo, title, body, labels, assignees } = (await request.json()) as {
       owner: string;
       repo: string;
       title: string;
       body?: string;
       labels?: string[];
+      assignees?: string[];
     };
 
     if (!owner || !repo || !title?.trim()) {
@@ -31,7 +32,8 @@ export async function POST(request: NextRequest) {
       repo,
       title.trim(),
       body || "",
-      labels || []
+      labels || [],
+      assignees || []
     );
 
     return NextResponse.json(issue);

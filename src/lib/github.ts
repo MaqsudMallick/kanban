@@ -198,7 +198,8 @@ export async function createIssue(
   repo: string,
   title: string,
   body: string,
-  labels: string[]
+  labels: string[],
+  assignees: string[] = []
 ) {
   // Ensure all labels exist on the repo
   for (const label of labels) {
@@ -220,8 +221,38 @@ export async function createIssue(
     title,
     body: body || undefined,
     labels: labels.length > 0 ? labels : undefined,
+    assignees: assignees.length > 0 ? assignees : undefined,
   });
 
+  return data;
+}
+
+export async function fetchAssignableUsers(
+  octokit: Octokit,
+  owner: string,
+  repo: string
+) {
+  const users = await octokit.paginate(octokit.issues.listAssignees, {
+    owner,
+    repo,
+    per_page: 100,
+  });
+  return users.map((u) => ({ login: u.login, avatar_url: u.avatar_url }));
+}
+
+export async function setIssueAssignees(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  issueNumber: number,
+  assignees: string[]
+) {
+  const { data } = await octokit.issues.update({
+    owner,
+    repo,
+    issue_number: issueNumber,
+    assignees,
+  });
   return data;
 }
 

@@ -146,6 +146,22 @@ export function KanbanBoard({ board }: { board: BoardConfig }) {
     [board.columnMappings, fetchIssues]
   );
 
+  const handleAssigneesChange = useCallback(
+    (issueKey: string, assignees: { login: string; avatar_url: string }[]) => {
+      const [ownerRepo, numStr] = issueKey.split("#");
+      const [owner, repo] = ownerRepo.split("/");
+      const num = parseInt(numStr, 10);
+      setIssues((prev) =>
+        prev.map((i) =>
+          i.repoOwner === owner && i.repo === repo && i.number === num
+            ? { ...i, assignees }
+            : i
+        )
+      );
+    },
+    []
+  );
+
   const filteredIssues = applyFilters(issues, filters);
   const grouped = groupIssuesByColumn(filteredIssues, columns);
 
@@ -200,6 +216,7 @@ export function KanbanBoard({ board }: { board: BoardConfig }) {
               onAddIssue={setNewIssueColumnId}
               onWidthChange={handleWidthChange}
               onToggleCollapse={handleToggleCollapse}
+              onAssigneesChange={handleAssigneesChange}
             />
           ))}
         </DragDropContext>
