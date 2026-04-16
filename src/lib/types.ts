@@ -2,7 +2,14 @@ export interface BoardColumn {
   id: string;
   title: string;
   color: string;
+  width?: number;
+  collapsed?: boolean;
 }
+
+export const COLUMN_DEFAULT_WIDTH = 320;
+export const COLUMN_MIN_WIDTH = 220;
+export const COLUMN_MAX_WIDTH = 600;
+export const COLUMN_COLLAPSED_WIDTH = 48;
 
 export interface LinkedPR {
   number: number;

@@ -1,18 +1,60 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
-import { BoardConfig, KanbanIssue } from "@/lib/types";
-import { groupIssuesByColumn } from "@/lib/board-store";
+import { BoardColumn as BoardColumnType, BoardConfig, KanbanIssue } from "@/lib/types";
+import { groupIssuesByColumn, updateBoard } from "@/lib/board-store";
 import { BoardColumn } from "./board-column";
 import { NewIssueModal } from "./new-issue-modal";
 
 export function KanbanBoard({ board }: { board: BoardConfig }) {
   const [issues, setIssues] = useState<KanbanIssue[]>([]);
+  const [columns, setColumns] = useState<BoardColumnType[]>(board.columns);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [moving, setMoving] = useState<string | null>(null);
   const [newIssueColumnId, setNewIssueColumnId] = useState<string | null>(null);
+
+  const persistTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync local columns when the board prop changes (e.g. repo added/removed)
+  useEffect(() => {
+    setColumns(board.columns);
+  }, [board.columns]);
+
+  const persistColumns = useCallback(
+    (next: BoardColumnType[]) => {
+      if (persistTimer.current) clearTimeout(persistTimer.current);
+      persistTimer.current = setTimeout(() => {
+        updateBoard({ ...board, columns: next });
+      }, 200);
+    },
+    [board]
+  );
+
+  const handleWidthChange = useCallback(
+    (columnId: string, width: number) => {
+      setColumns((prev) => {
+        const next = prev.map((c) => (c.id === columnId ? { ...c, width } : c));
+        persistColumns(next);
+        return next;
+      });
+    },
+    [persistColumns]
+  );
+
+  const handleToggleCollapse = useCallback(
+    (columnId: string) => {
+      setColumns((prev) => {
+        const next = prev.map((c) =>
+          c.id === columnId ? { ...c, collapsed: !c.collapsed } : c
+        );
+        persistColumns(next);
+        return next;
+      });
+    },
+    [persistColumns]
+  );
 
   const fetchIssues = useCallback(async () => {
     try {
@@ -99,7 +141,7 @@ export function KanbanBoard({ board }: { board: BoardConfig }) {
     [board.columnMappings, fetchIssues]
   );
 
-  const grouped = groupIssuesByColumn(issues, board.columns);
+  const grouped = groupIssuesByColumn(issues, columns);
 
   if (loading) {
     return (
@@ -137,12 +179,14 @@ export function KanbanBoard({ board }: { board: BoardConfig }) {
   return (
     <div className="flex h-full gap-4 overflow-x-auto p-4">
       <DragDropContext onDragEnd={onDragEnd}>
-        {board.columns.map((column) => (
+        {columns.map((column) => (
           <BoardColumn
             key={column.id}
             column={column}
             issues={grouped[column.id] || []}
             onAddIssue={setNewIssueColumnId}
+            onWidthChange={handleWidthChange}
+            onToggleCollapse={handleToggleCollapse}
           />
         ))}
       </DragDropContext>
