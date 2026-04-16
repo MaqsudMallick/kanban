@@ -6,6 +6,7 @@ import { BoardColumn as BoardColumnType, BoardConfig, KanbanIssue } from "@/lib/
 import { groupIssuesByColumn, updateBoard } from "@/lib/board-store";
 import { BoardColumn } from "./board-column";
 import { NewIssueModal } from "./new-issue-modal";
+import { BoardFilters, FilterState, applyFilters } from "./board-filters";
 
 export function KanbanBoard({ board }: { board: BoardConfig }) {
   const [issues, setIssues] = useState<KanbanIssue[]>([]);
@@ -14,6 +15,10 @@ export function KanbanBoard({ board }: { board: BoardConfig }) {
   const [error, setError] = useState<string | null>(null);
   const [moving, setMoving] = useState<string | null>(null);
   const [newIssueColumnId, setNewIssueColumnId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<FilterState>({
+    repos: new Set(),
+    labels: new Set(),
+  });
 
   const persistTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -141,7 +146,8 @@ export function KanbanBoard({ board }: { board: BoardConfig }) {
     [board.columnMappings, fetchIssues]
   );
 
-  const grouped = groupIssuesByColumn(issues, columns);
+  const filteredIssues = applyFilters(issues, filters);
+  const grouped = groupIssuesByColumn(filteredIssues, columns);
 
   if (loading) {
     return (
@@ -177,19 +183,27 @@ export function KanbanBoard({ board }: { board: BoardConfig }) {
   }
 
   return (
-    <div className="flex h-full gap-4 overflow-x-auto p-4">
-      <DragDropContext onDragEnd={onDragEnd}>
-        {columns.map((column) => (
-          <BoardColumn
-            key={column.id}
-            column={column}
-            issues={grouped[column.id] || []}
-            onAddIssue={setNewIssueColumnId}
-            onWidthChange={handleWidthChange}
-            onToggleCollapse={handleToggleCollapse}
-          />
-        ))}
-      </DragDropContext>
+    <div className="flex h-full flex-col">
+      <BoardFilters
+        issues={issues}
+        repos={board.repos}
+        filters={filters}
+        onChange={setFilters}
+      />
+      <div className="flex flex-1 gap-4 overflow-x-auto p-4">
+        <DragDropContext onDragEnd={onDragEnd}>
+          {columns.map((column) => (
+            <BoardColumn
+              key={column.id}
+              column={column}
+              issues={grouped[column.id] || []}
+              onAddIssue={setNewIssueColumnId}
+              onWidthChange={handleWidthChange}
+              onToggleCollapse={handleToggleCollapse}
+            />
+          ))}
+        </DragDropContext>
+      </div>
       {moving && (
         <div className="fixed bottom-4 right-4 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg">
           Updating GitHub...
@@ -208,3 +222,4 @@ export function KanbanBoard({ board }: { board: BoardConfig }) {
     </div>
   );
 }
+
