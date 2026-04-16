@@ -34,10 +34,7 @@ export async function POST(request: NextRequest) {
       labels || []
     );
 
-    return NextResponse.json({
-      number: issue.number,
-      html_url: issue.html_url,
-    });
+    return NextResponse.json(issue);
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || "Failed to create issue" },

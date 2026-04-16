@@ -61,6 +61,31 @@ export const DEFAULT_COLUMN_MAPPINGS: ColumnMapping[] = [
   { columnId: "done", label: null, matchClosed: true, matchPR: false },
 ];
 
+export function determineColumn(
+  issue: { state: string; labels: { name: string }[] },
+  hasOpenPR: boolean,
+  mappings: ColumnMapping[]
+): string {
+  const closedMapping = mappings.find((m) => m.matchClosed);
+  if (issue.state === "closed" && closedMapping) {
+    return closedMapping.columnId;
+  }
+
+  for (const mapping of mappings) {
+    if (mapping.label && issue.labels.some((l) => l.name === mapping.label)) {
+      return mapping.columnId;
+    }
+  }
+
+  const prMapping = mappings.find((m) => m.matchPR);
+  if (hasOpenPR && prMapping) {
+    return prMapping.columnId;
+  }
+
+  const backlog = mappings.find((m) => !m.label && !m.matchClosed && !m.matchPR);
+  return backlog?.columnId ?? "backlog";
+}
+
 export const REPO_COLORS = [
   "#3b82f6", // blue
   "#ef4444", // red

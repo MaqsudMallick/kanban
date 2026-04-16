@@ -4,39 +4,11 @@ import {
   LinkedPR,
   ColumnMapping,
   DEFAULT_COLUMN_MAPPINGS,
+  determineColumn,
 } from "./types";
 
 export function createOctokit(accessToken: string) {
   return new Octokit({ auth: accessToken });
-}
-
-function determineColumn(
-  issue: { state: string; labels: { name: string }[] },
-  hasOpenPR: boolean,
-  mappings: ColumnMapping[]
-): string {
-  // Closed issues go to "done"
-  const closedMapping = mappings.find((m) => m.matchClosed);
-  if (issue.state === "closed" && closedMapping) {
-    return closedMapping.columnId;
-  }
-
-  // Check label-based mappings (most specific first)
-  for (const mapping of mappings) {
-    if (mapping.label && issue.labels.some((l) => l.name === mapping.label)) {
-      return mapping.columnId;
-    }
-  }
-
-  // Check PR-based mapping
-  const prMapping = mappings.find((m) => m.matchPR);
-  if (hasOpenPR && prMapping) {
-    return prMapping.columnId;
-  }
-
-  // Default to backlog
-  const backlog = mappings.find((m) => !m.label && !m.matchClosed && !m.matchPR);
-  return backlog?.columnId ?? "backlog";
 }
 
 export async function fetchIssuesForRepo(

@@ -156,7 +156,9 @@ export function KanbanBoard({ board }: { board: BoardConfig }) {
           board={board}
           defaultColumnId={newIssueColumnId}
           onClose={() => setNewIssueColumnId(null)}
-          onCreated={fetchIssues}
+          onCreated={(issue) => {
+            setIssues((prev) => [issue, ...prev]);
+          }}
         />
       )}
     </div>

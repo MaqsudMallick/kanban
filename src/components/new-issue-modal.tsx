@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BoardConfig } from "@/lib/types";
+import { BoardConfig, KanbanIssue, determineColumn } from "@/lib/types";
 
 interface RepoLabel {
   name: string;
@@ -18,7 +18,7 @@ export function NewIssueModal({
   board: BoardConfig;
   defaultColumnId: string;
   onClose: () => void;
-  onCreated: () => void;
+  onCreated: (issue: KanbanIssue) => void;
 }) {
   const defaultRepo = board.repos[0];
   const [owner, setOwner] = useState(defaultRepo.owner);
@@ -108,12 +108,52 @@ export function NewIssueModal({
         }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || "Failed to create issue");
       }
 
-      onCreated();
+      // Build a KanbanIssue from the API response so the board can show it instantly
+      const repoConfig = board.repos.find(
+        (r) => r.owner === owner && r.repo === repo
+      );
+      const labels = (data.labels || [])
+        .filter(
+          (l: any) => typeof l !== "string" && l && typeof l.name === "string"
+        )
+        .map((l: any) => ({ name: l.name, color: l.color || "ededed" }));
+
+      const newIssue: KanbanIssue = {
+        id: data.id,
+        number: data.number,
+        title: data.title,
+        body: data.body ?? null,
+        state: data.state,
+        labels,
+        assignees: (data.assignees || []).map((a: any) => ({
+          login: a.login,
+          avatar_url: a.avatar_url,
+        })),
+        user: {
+          login: data.user?.login ?? "unknown",
+          avatar_url: data.user?.avatar_url ?? "",
+        },
+        repo,
+        repoOwner: owner,
+        repoColor: repoConfig?.color ?? "#6b7280",
+        columnId: determineColumn(
+          { state: data.state, labels: labels.map((l: any) => ({ name: l.name })) },
+          false,
+          board.columnMappings
+        ),
+        linkedPRs: [],
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        comments: 0,
+        html_url: data.html_url,
+      };
+
+      onCreated(newIssue);
       onClose();
     } catch (err: any) {
       setError(err.message);
