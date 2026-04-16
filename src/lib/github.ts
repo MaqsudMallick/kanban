@@ -220,6 +220,57 @@ export async function moveIssue(
   });
 }
 
+export async function createIssue(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  title: string,
+  body: string,
+  labels: string[]
+) {
+  // Ensure all labels exist on the repo
+  for (const label of labels) {
+    try {
+      await octokit.issues.getLabel({ owner, repo, name: label });
+    } catch {
+      await octokit.issues.createLabel({
+        owner,
+        repo,
+        name: label,
+        color: "ededed",
+      });
+    }
+  }
+
+  const { data } = await octokit.issues.create({
+    owner,
+    repo,
+    title,
+    body: body || undefined,
+    labels: labels.length > 0 ? labels : undefined,
+  });
+
+  return data;
+}
+
+export async function fetchRepoLabels(
+  octokit: Octokit,
+  owner: string,
+  repo: string
+) {
+  const labels = await octokit.paginate(octokit.issues.listLabelsForRepo, {
+    owner,
+    repo,
+    per_page: 100,
+  });
+
+  return labels.map((l) => ({
+    name: l.name,
+    color: l.color,
+    description: l.description,
+  }));
+}
+
 export async function fetchUserRepos(octokit: Octokit) {
   const repos = await octokit.paginate(octokit.repos.listForAuthenticatedUser, {
     per_page: 100,

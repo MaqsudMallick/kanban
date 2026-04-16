@@ -7,9 +7,11 @@ import { IssueCard } from "./issue-card";
 export function BoardColumn({
   column,
   issues,
+  onAddIssue,
 }: {
   column: BoardColumnType;
   issues: KanbanIssue[];
+  onAddIssue?: (columnId: string) => void;
 }) {
   return (
     <div className="flex h-full w-80 shrink-0 flex-col rounded-xl bg-gray-50 border border-gray-200 dark:bg-neutral-900 dark:border-gray-800">
@@ -23,6 +25,18 @@ export function BoardColumn({
         <span className="ml-auto rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-neutral-800 dark:text-gray-400">
           {issues.length}
         </span>
+        {onAddIssue && (
+          <button
+            onClick={() => onAddIssue(column.id)}
+            className="rounded p-1 text-gray-500 hover:bg-gray-200 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-neutral-800 dark:hover:text-gray-200"
+            title="New issue in this column"
+            aria-label="New issue"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Droppable area */}

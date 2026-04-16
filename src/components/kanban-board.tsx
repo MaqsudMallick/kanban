@@ -5,12 +5,14 @@ import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { BoardConfig, KanbanIssue } from "@/lib/types";
 import { groupIssuesByColumn } from "@/lib/board-store";
 import { BoardColumn } from "./board-column";
+import { NewIssueModal } from "./new-issue-modal";
 
 export function KanbanBoard({ board }: { board: BoardConfig }) {
   const [issues, setIssues] = useState<KanbanIssue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [moving, setMoving] = useState<string | null>(null);
+  const [newIssueColumnId, setNewIssueColumnId] = useState<string | null>(null);
 
   const fetchIssues = useCallback(async () => {
     try {
@@ -140,6 +142,7 @@ export function KanbanBoard({ board }: { board: BoardConfig }) {
             key={column.id}
             column={column}
             issues={grouped[column.id] || []}
+            onAddIssue={setNewIssueColumnId}
           />
         ))}
       </DragDropContext>
@@ -147,6 +150,14 @@ export function KanbanBoard({ board }: { board: BoardConfig }) {
         <div className="fixed bottom-4 right-4 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg">
           Updating GitHub...
         </div>
+      )}
+      {newIssueColumnId && (
+        <NewIssueModal
+          board={board}
+          defaultColumnId={newIssueColumnId}
+          onClose={() => setNewIssueColumnId(null)}
+          onCreated={fetchIssues}
+        />
       )}
     </div>
   );
